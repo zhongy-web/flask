@@ -1,0 +1,16 @@
+<table class="table table-hover">
+    <tr>
+        <td>序号</td>
+        <td>班级</td>
+        <td>姓名</td>
+    </tr>
+    {% for user in users %}
+        {% if user %}
+        <tr>
+            <td>{{ user.id }}</td>
+            <td>{{ user.s_class }}</td>
+            <td><a href="{{ url_for('sign.user_sign',username=user.username) }}">{{ user.name }}</a></td>
+        </tr>
+        {% endif %}
+    {% endfor %}
+</table>

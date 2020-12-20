@@ -1,0 +1,39 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+
+{% block title %}博客 - 个人签到记录{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>{{ user.name }}的签到记录</h1>
+    <b>您的学习时长为 {{ user.sign_time_total }} 小时</b>
+    {% if current_user.can(Permission.ADMIN) %}
+       <a href="{{ url_for('sign.replenish_sign_admin',id=user.id) }}">
+       <button type="button" class="btn btn-primary">补签</button></a>
+    {% endif %}
+</div>
+<table class="table table-hover">
+
+    <tr>
+        <td>班级</td>
+        <td>姓名</td>
+        <td>签到时间</td>
+        <td>签退时间</td>
+    </tr>
+{% for signer in signers %}
+    <tr>
+        <td>{{ signer.signer_class }}</td>
+        <td>{{ signer.name}}</td>
+        <td>{{ signer.sign_time }}</td>
+        <td>{{ signer.signout_time }}</td>
+    </tr>
+{% endfor %}
+
+
+</table>
+{% if pagination %}
+<div class="pagination">
+    {{ macros.pagination_widget(pagination, 'sign.user_sign',username=user.username) }}
+</div>
+{% endif %}
+{% endblock %}

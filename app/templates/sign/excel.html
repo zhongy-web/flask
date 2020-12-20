@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% import "_macros.html" as macros %}
+{% import "bootstrap/wtf.html" as wtf %}
+
+
+{% block title %}博客 - 生成Excel{% endblock %}
+
+{% block page_content %}
+<div class="page-header">
+    <h1>一键生成Excel表格</h1>
+</div>
+<div class="col-md-4">
+    {{ wtf.quick_form(form) }}
+</div>
+{% endblock %}

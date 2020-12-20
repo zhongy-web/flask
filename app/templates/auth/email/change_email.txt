@@ -1,0 +1,6 @@
+哈喽 {{ user.username }},
+
+点击下面链接确认新地址:
+
+{{ url_for('auth.change_email', token=token, _external=True) }}
+
