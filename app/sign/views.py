@@ -79,6 +79,9 @@ def replenish_sign_admin(id):
 def sign_in():
     user = User.query.filter_by(username=current_user.username).first()
     form = SignForm()
+    if not user.name:
+        flash("请填写您的班级和真实姓名")
+        return redirect(url_for('main.edit_profile'))
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
         signer_class = user.s_class
         name = user.name
@@ -90,6 +93,37 @@ def sign_in():
         return redirect(url_for('main.index'))
     else:
         flash('签到失败！！！')
+        return redirect(url_for('main.index'))
+
+
+'''
+    新添加一个签退视图，用于实现签退功能
+'''
+
+
+@sign.route('/signout', methods=['POST'])
+def sign_out():
+    user = User.query.filter_by(username=current_user.username).first()
+    sign = Signer.query.filter_by(signer_id=user.id).order_by(Signer.sign_time.desc()).first()
+    form = SignOutForm()
+    if current_user.can(Permission.WRITE) and form.validate_on_submit():
+        user.sign_status = False
+        sign.signout_time = datetime.datetime.now()
+        t1 = sign.sign_time.strftime("%Y-%m-%d %H:%M:%S")
+        t1 = datetime.datetime.strptime(t1, r"%Y-%m-%d %H:%M:%S")
+        t2 = sign.signout_time.strftime("%Y-%m-%d %H:%M:%S")
+        t2 = datetime.datetime.strptime(t2, r"%Y-%m-%d %H:%M:%S")
+        # 时间类型换算问题，使用seconds使之变为秒数，然后换算
+        time_total = (t2 - t1).seconds/3600
+        # float类型小数点处理
+        # user.sign_time_total += round(time_total, 3)
+        user.sign_time_total += math.floor(time_total * 10 ** 2) / (10 ** 2)
+        db.session.add(user)
+        db.session.commit()
+        flash('你已经签退成功！请勿重复操作！！')
+        return redirect(url_for('main.index'))
+    else:
+        flash('签退失败！！！')
         return redirect(url_for('main.index'))
 
 
@@ -138,33 +172,3 @@ def excel():
         flash("excel生成成功")
     return render_template('sign/excel.html', form=form)
 
-
-'''
-    新添加一个签退视图，用于实现签退功能
-'''
-
-
-@sign.route('/signout', methods=['POST'])
-def sign_out():
-    user = User.query.filter_by(username=current_user.username).first()
-    sign = Signer.query.order_by(Signer.sign_time.desc()).first()
-    form = SignOutForm()
-    if current_user.can(Permission.WRITE) and form.validate_on_submit():
-        user.sign_status = False
-        sign.signout_time = datetime.datetime.now()
-        t1 = sign.sign_time.strftime("%Y-%m-%d %H:%M:%S")
-        t1 = datetime.datetime.strptime(t1, r"%Y-%m-%d %H:%M:%S")
-        t2 = sign.signout_time.strftime("%Y-%m-%d %H:%M:%S")
-        t2 = datetime.datetime.strptime(t2, r"%Y-%m-%d %H:%M:%S")
-        # 时间类型换算问题，使用seconds使之变为秒数，然后换算
-        time_total = (t2 - t1).seconds/3600
-        # float类型小数点处理
-        # user.sign_time_total += round(time_total, 3)
-        user.sign_time_total += math.floor(time_total * 10 ** 2) / (10 ** 2)
-        db.session.add(user)
-        db.session.commit()
-        flash('你已经签退成功！请勿重复操作！！')
-        return redirect(url_for('main.index'))
-    else:
-        flash('签退失败！！！')
-        return redirect(url_for('main.index'))

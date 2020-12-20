@@ -64,7 +64,6 @@ def edit_profile():
     form.name.data = current_user.name
     form.s_class.data = current_user.s_class
     form.about_me.data = current_user.about_me
-    flash('请完善你的个人信息！！')
     return render_template('edit_profile.html', form=form)
 
 

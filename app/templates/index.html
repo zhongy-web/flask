@@ -7,24 +7,17 @@
 {% block page_content %}
 <div class="page-header">
      {% if current_user.is_authenticated %}
-            {% if current_user.name == "" %}
-                <form method="get" action="{{ url_for('main.edit_profile') }}">
-                {{ form1.csrf_token }}
-                    {{ form1.submit(class='btn btn-success pull-right btn-lg') }}
+            {% if current_user.sign_status %}
+                <form method="post" action="{{ url_for('sign.sign_out' ) }}">
+                {{ form_out.csrf_token }}
+                {{ form_out.submit(class='btn btn-danger pull-right btn-lg') }}
                 </form>
-                {% else %}
-                    {% if current_user.sign_status %}
-                        <form method="post" action="{{ url_for('sign.sign_out' ) }}">
-                        {{ form_out.csrf_token }}
-                        {{ form_out.submit(class='btn btn-danger pull-right btn-lg') }}
-                        </form>
-                     {% else %}
-                        <form method="post" action="{{ url_for('sign.sign_in' ) }}">
-                        {{ form_in.csrf_token }}
-                        {{ form_in.submit(class='btn btn-success pull-right btn-lg') }}
-                        </form>
-                    {% endif %}
-                {% endif %}
+            {% else %}
+                <form method="post" action="{{ url_for('sign.sign_in' ) }}">
+                {{ form_in.csrf_token }}
+                {{ form_in.submit(class='btn btn-success pull-right btn-lg') }}
+                </form>
+            {% endif %}
     {% endif %}
     <h1>你好, {% if current_user.is_authenticated %}{{ current_user.username }}{% else %}游客{% endif %}!</h1>
 </div>
