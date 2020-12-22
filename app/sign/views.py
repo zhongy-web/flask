@@ -3,7 +3,8 @@ import math
 import os
 
 import openpyxl
-from flask import request, current_app, render_template, flash, redirect, url_for
+from flask import request, current_app, render_template, flash, redirect, url_for, make_response, send_from_directory, \
+    app
 from flask_login import login_required, current_user
 
 from app import db
@@ -79,10 +80,14 @@ def replenish_sign_admin(id):
 def sign_in():
     user = User.query.filter_by(username=current_user.username).first()
     form = SignForm()
-    if not user.name:
-        flash("请填写您的班级和真实姓名")
-        return redirect(url_for('main.edit_profile'))
+
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
+        if not user.name:
+            flash("请填写您的班级和真实姓名")
+            return redirect(url_for('main.edit_profile'))
+        if user.sign_status:
+            flash("请勿重复签到")
+            return redirect(url_for('main.index'))
         signer_class = user.s_class
         name = user.name
         signer = Signer(signer_class=signer_class, name=name, signer=user)
@@ -107,6 +112,9 @@ def sign_out():
     sign = Signer.query.filter_by(signer_id=user.id).order_by(Signer.sign_time.desc()).first()
     form = SignOutForm()
     if current_user.can(Permission.WRITE) and form.validate_on_submit():
+        if not user.sign_status:
+            flash("请勿重复签退")
+            return redirect(url_for('main.index'))
         user.sign_status = False
         sign.signout_time = datetime.datetime.now()
         t1 = sign.sign_time.strftime("%Y-%m-%d %H:%M:%S")
@@ -114,7 +122,7 @@ def sign_out():
         t2 = sign.signout_time.strftime("%Y-%m-%d %H:%M:%S")
         t2 = datetime.datetime.strptime(t2, r"%Y-%m-%d %H:%M:%S")
         # 时间类型换算问题，使用seconds使之变为秒数，然后换算
-        time_total = (t2 - t1).seconds/3600
+        time_total = (t2 - t1).seconds / 3600
         # float类型小数点处理
         # user.sign_time_total += round(time_total, 3)
         user.sign_time_total += math.floor(time_total * 10 ** 2) / (10 ** 2)
@@ -170,5 +178,5 @@ def excel():
         wb.save('{}.xlsx'.format(data))
         wb.close()
         flash("excel生成成功")
+        return send_from_directory(os.getcwd(), "{}.xlsx".format(data), as_attachment=True)
     return render_template('sign/excel.html', form=form)
-
