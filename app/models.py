@@ -106,6 +106,7 @@ class User(UserMixin, db.Model):
     avatar_hash = db.Column(db.String(32))
     sign_status = db.Column(db.Boolean, default=False)
     sign_time_total = db.Column(db.Float(), default=0)
+    real_avatar = db.Column(db.String(128), default=None)
     posts = db.relationship('Post', backref='author', lazy='dynamic')
     followed = db.relationship('Follow',
                                foreign_keys=[Follow.follower_id],

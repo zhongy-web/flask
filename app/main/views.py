@@ -2,8 +2,8 @@ from flask import render_template, redirect, url_for, abort, flash, request,\
     current_app, make_response
 from flask_login import login_required, current_user
 from . import main
-from .forms import EditProfileForm, EditProfileAdminForm, PostForm,\
-    CommentForm
+from .forms import EditProfileForm, EditProfileAdminForm, PostForm, \
+    CommentForm, ChangeAvatarForm
 from .. import db
 from ..models import Permission, Role, User, Post, Comment
 from ..decorators import admin_required, permission_required
@@ -256,3 +256,32 @@ def moderate_disable(id):
     db.session.commit()
     return redirect(url_for('.moderate',
                             page=request.args.get('page', 1, type=int)))
+
+@main.route('/change-avatar', methods=['GET', 'POST'])
+@login_required
+def change_avatar():
+    '''修改头像'''
+    form = ChangeAvatarForm()
+    if form.validate_on_submit():
+        # 文件对象
+        avatar = request.files['avatar']
+        fname = avatar.filename
+        # 存储路径
+        upload_folder = current_app.config['UPLOAD_FOLDER']
+        # 允许格式
+        allowed_extensions = ['png', 'jpg', 'jpeg', 'gif']
+        # 后缀名
+        fext = fname.rsplit('.',1)[-1] if '.' in fname else ''
+        # 判断是否符合要求
+        if fext not in allowed_extensions:
+            flash('File error.')
+            return redirect(url_for('.user', username=current_user.username))
+        # 路径+用户名+后缀名
+        target = '{}{}.{}'.format(upload_folder, current_user.username, fext)
+        avatar.save(target)
+        current_user.real_avatar = '/static/avatars/{}.{}'.format(current_user.username, fext)
+        db.session.add(current_user)
+        flash('你的头像已被修改')
+        db.session.commit()
+        return redirect(url_for('.user', username = current_user.username))
+    return render_template('change_avatar.html', form=form)
